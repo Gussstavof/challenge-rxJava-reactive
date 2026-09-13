@@ -1,4 +1,5 @@
 import rx.Observable;
+import rx.functions.Action0;
 import rx.schedulers.Schedulers;
 
 import java.util.ArrayList;
@@ -25,18 +26,18 @@ public class Main {
                     return order;
                 })
                 .flatMap(Main::simulationQuery)
+                .toBlocking()
                 .subscribe(
                         order -> System.out.printf("order %s processed: %s thread: %s\n", order.getId(), order.getPrice(), Thread.currentThread().getName()),
                         Throwable::getStackTrace,
                         () -> System.out.println("Process completed!")
                 );
-
-        Thread.sleep(5000);
     }
 
     public static Observable<Order> simulationQuery(Order order) {
         return Observable.just(order)
                 .delay(1000, TimeUnit.MILLISECONDS)
+                .doOnSubscribe(() -> System.out.println(Thread.currentThread().getName() + ": simulationQuery"))
                 .subscribeOn(Schedulers.io());
     }
 
